@@ -8,7 +8,6 @@
 
     <div class="info">
       <h4 class="name"><?php echo $name; ?></h4>
-      <div class="manufacturer-name"><?php echo !empty($manufacturer['name']) ? $manufacturer['name'] : '&nbsp;'; ?></div>
       <div class="description"><?php echo $short_description; ?></div>
       <div class="price-wrapper">
         <?php if ($campaign_price) { ?>
