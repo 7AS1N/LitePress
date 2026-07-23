@@ -25,13 +25,8 @@
         </div>
 
         <div class="col-md-6">
+          <!-- 1. Product Name -->
           <h1 class="title"><?php echo $name; ?></h1>
-
-          <?php if ($short_description) { ?>
-          <p class="short-description">
-            <?php echo $short_description; ?>
-          </p>
-          <?php } ?>
 
           <?php if (!empty($manufacturer)) { ?>
           <div class="manufacturer">
@@ -42,12 +37,6 @@
               <h3><?php echo $manufacturer['name']; ?></h3>
               <?php } ?>
             </a>
-          </div>
-          <?php } ?>
-
-          <?php if ($cheapest_shipping_fee !== null) { ?>
-          <div class="cheapest-shipping" style="margin: 1em 0;">
-            <?php echo functions::draw_fonticon('fa-truck'); ?> <?php echo strtr(language::translate('text_cheapest_shipping_from_price', 'Cheapest shipping from <strong class="value">%price</strong>'), ['%price' => currency::format($cheapest_shipping_fee)]); ?>
           </div>
           <?php } ?>
 
@@ -73,49 +62,62 @@
           </div>
           <?php } ?>
 
-          <div class="stock-status" style="margin: 1em 0;">
-           <?php if ($quantity > 0) { ?>
-            <div class="stock-available">
-              <?php echo language::translate('title_stock_status', 'Stock Status'); ?>:
-              <span class="value"><?php echo $stock_status; ?></span>
-            </div>
-            <?php if ($delivery_status) { ?>
-            <div class="stock-delivery">
-              <?php echo language::translate('title_delivery_status', 'Delivery Status'); ?>: <span class="value"><?php echo $delivery_status['name']; ?></span>
-              <?php if (!empty($delivery_status['description'])) { ?>
-              <div class="description"><?php echo $delivery_status['description']; ?></div>
-              <?php } ?>
-            </div>
-            <?php } ?>
-           <?php } else { ?>
-            <?php if ($sold_out_status) { ?>
-              <div class="<?php echo empty($sold_out_status['orderable']) ? 'stock-partly-available' : 'stock-unavailable'; ?>">
-                <?php echo language::translate('title_stock_status', 'Stock Status'); ?>: <span class="value"><?php echo $sold_out_status['name']; ?></span>
-                <?php if (!empty($sold_out_status['description'])) { ?>
-                <div class="description"><?php echo $sold_out_status['description']; ?></div>
-                <?php } ?>
-              </div>
-            <?php } else { ?>
-              <div class="stock-unavailable">
-                <?php echo language::translate('title_stock_status', 'Stock Status'); ?>: <span class="value"><?php echo language::translate('title_sold_out', 'Sold Out'); ?></span>
-                <?php if (!empty($sold_out_status['description'])) { ?>
-                <div class="description"><?php echo $sold_out_status['description']; ?></div>
-                <?php } ?>
-              </div>
-            <?php } ?>
-           <?php } ?>
-          </div>
-
-          <?php if ($recommended_price) { ?>
-          <div class="recommended-price" style="margin: 1em 0;">
-            <?php echo language::translate('title_recommended_price', 'Recommended Price'); ?>: <span class="value"><?php echo currency::format($recommended_price); ?></span>
-          </div>
-          <?php } ?>
-
           <div class="buy_now" style="margin: 1em 0;">
             <?php echo functions::form_draw_form_begin('buy_now_form', 'post'); ?>
             <?php echo functions::form_draw_hidden_field('product_id', $product_id); ?>
 
+            <!-- 2. Product Price -->
+            <div class="price-wrapper" style="margin-bottom: 1em;">
+              <?php if ($campaign_price) { ?>
+              <del class="regular-price"><?php echo currency::format($regular_price); ?></del> <strong class="campaign-price"><?php echo currency::format($campaign_price); ?></strong>
+              <?php } else if ($recommended_price) { ?>
+              <del class="recommended-price"><?php echo currency::format($recommended_price); ?></del> <strong class="price"><?php echo currency::format($regular_price); ?></strong>
+              <?php } else { ?>
+              <span class="price"><?php echo currency::format($final_price); ?></span>
+              <?php } ?>
+            </div>
+
+            <?php if ($recommended_price) { ?>
+            <div class="recommended-price" style="margin: 1em 0;">
+              <?php echo language::translate('title_recommended_price', 'Recommended Price'); ?>: <span class="value"><?php echo currency::format($recommended_price); ?></span>
+            </div>
+            <?php } ?>
+
+            <!-- 3. Stock Status -->
+            <div class="stock-status" style="margin: 1em 0;">
+             <?php if ($quantity > 0) { ?>
+              <div class="stock-available">
+                <?php echo language::translate('title_stock_status', 'Stock Status'); ?>:
+                <span class="value"><?php echo $stock_status; ?></span>
+              </div>
+              <?php if ($delivery_status) { ?>
+              <div class="stock-delivery">
+                <?php echo language::translate('title_delivery_status', 'Delivery Status'); ?>: <span class="value"><?php echo $delivery_status['name']; ?></span>
+                <?php if (!empty($delivery_status['description'])) { ?>
+                <div class="description"><?php echo $delivery_status['description']; ?></div>
+                <?php } ?>
+              </div>
+              <?php } ?>
+             <?php } else { ?>
+              <?php if ($sold_out_status) { ?>
+                <div class="<?php echo empty($sold_out_status['orderable']) ? 'stock-partly-available' : 'stock-unavailable'; ?>">
+                  <?php echo language::translate('title_stock_status', 'Stock Status'); ?>: <span class="value"><?php echo $sold_out_status['name']; ?></span>
+                  <?php if (!empty($sold_out_status['description'])) { ?>
+                  <div class="description"><?php echo $sold_out_status['description']; ?></div>
+                  <?php } ?>
+                </div>
+              <?php } else { ?>
+                <div class="stock-unavailable">
+                  <?php echo language::translate('title_stock_status', 'Stock Status'); ?>: <span class="value"><?php echo language::translate('title_sold_out', 'Sold Out'); ?></span>
+                  <?php if (!empty($sold_out_status['description'])) { ?>
+                  <div class="description"><?php echo $sold_out_status['description']; ?></div>
+                  <?php } ?>
+                </div>
+              <?php } ?>
+             <?php } ?>
+            </div>
+
+            <!-- 4. Attribute Selector (Options) -->
             <?php if ($options) { ?>
             <div class="options">
               <?php foreach ($options as $option) { ?>
@@ -127,28 +129,7 @@
             </div>
             <?php } ?>
 
-            <div class="price-wrapper">
-              <?php if ($campaign_price) { ?>
-              <del class="regular-price"><?php echo currency::format($regular_price); ?></del> <strong class="campaign-price"><?php echo currency::format($campaign_price); ?></strong>
-              <?php } else if ($recommended_price) { ?>
-              <del class="recommended-price"><?php echo currency::format($recommended_price); ?></del> <strong class="price"><?php echo currency::format($regular_price); ?></strong>
-              <?php } else { ?>
-              <span class="price"><?php echo currency::format($final_price); ?></span>
-              <?php } ?>
-            </div>
-
-            <?php if ($tax_rates) { ?>
-            <div class="tax" style="margin-bottom: 1em;">
-              <?php echo $including_tax ? language::translate('title_including_tax', 'Including Tax') : language::translate('title_excluding_tax', 'Excluding Tax'); ?>: <span class="total-tax"><?php echo currency::format($total_tax); ?></span>
-            </div>
-            <?php } ?>
-
-            <?php if ($campaign_price_end_date) { ?>
-            <div class="offer-expires" style="margin-bottom: 1em;">
-              <?php echo strtr(language::translate('text_offer_expires_on_date', 'The offer expires on %datetime.'), ['%datetime' => language::strftime(language::$selected['format_datetime'], strtotime($campaign_price_end_date))]); ?>
-            </div>
-            <?php } ?>
-
+            <!-- 5. Quantity & Add To Cart -->
             <?php if (!settings::get('catalog_only_mode') && ($quantity > 0 || empty($sold_out_status) || !empty($sold_out_status['orderable']))) { ?>
             <div class="form-group" style="margin-bottom: 0;">
               <label><?php echo language::translate('title_quantity', 'Quantity'); ?></label>
@@ -174,6 +155,32 @@
           <div class="out-of-stock-notice">
             <?php echo language::translate('description_item_is_out_of_stock', 'This item is currently out of stock and cannot be purchased.'); ?>
           </div>
+          <?php } ?>
+
+          <?php if ($tax_rates) { ?>
+          <div class="tax" style="margin-bottom: 1em;">
+            <?php echo $including_tax ? language::translate('title_including_tax', 'Including Tax') : language::translate('title_excluding_tax', 'Excluding Tax'); ?>: <span class="total-tax"><?php echo currency::format($total_tax); ?></span>
+          </div>
+          <?php } ?>
+
+          <?php if ($campaign_price_end_date) { ?>
+          <div class="offer-expires" style="margin-bottom: 1em;">
+            <?php echo strtr(language::translate('text_offer_expires_on_date', 'The offer expires on %datetime.'), ['%datetime' => language::strftime(language::$selected['format_datetime'], strtotime($campaign_price_end_date))]); ?>
+          </div>
+          <?php } ?>
+
+          <!-- 6. Estimate Delivery Time (Cheapest Shipping Rate) -->
+          <?php if ($cheapest_shipping_fee !== null) { ?>
+          <div class="cheapest-shipping" style="margin: 1em 0;">
+            <?php echo functions::draw_fonticon('fa-truck'); ?> <?php echo strtr(language::translate('text_cheapest_shipping_from_price', 'Cheapest shipping from <strong class="value">%price</strong>'), ['%price' => currency::format($cheapest_shipping_fee)]); ?>
+          </div>
+          <?php } ?>
+
+          <!-- 7. Short Description -->
+          <?php if ($short_description) { ?>
+          <p class="short-description" style="margin: 1em 0;">
+            <?php echo $short_description; ?>
+          </p>
           <?php } ?>
 
           <div class="social-bookmarks text-center">
