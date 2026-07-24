@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vmod>
+  <name>Single Name and Optional Fields Checkout Fix</name>
+  <description>Maps single name, makes email/city/postcode optional, and conditionally requires email for account creation.</description>
+  <version>1.1</version>
+  <author>Custom Developer</author>
+
+  <!-- 1. Adjust backend validation rules in ent_order.inc.php -->
+  <file name="includes/entities/ent_order.inc.php">
+    <operation method="replace">
+      <find><![CDATA[        if (empty($this->data['customer']['firstname'])) throw new Exception(language::translate('error_missing_firstname', 'You must enter a first name.'));
+        if (empty($this->data['customer']['lastname'])) throw new Exception(language::translate('error_missing_lastname', 'You must enter a last name.'));
+        if (empty($this->data['customer']['address1'])) throw new Exception(language::translate('error_missing_address1', 'You must enter an address.'));
+        if (empty($this->data['customer']['city'])) throw new Exception(language::translate('error_missing_city', 'You must enter a city.'));
+        if (empty($this->data['customer']['country_code'])) throw new Exception(language::translate('error_missing_country', 'You must select a country.'));
+        if (empty($this->data['customer']['email'])) throw new Exception(language::translate('error_missing_email', 'You must enter an email address.'));
+        if (empty($this->data['customer']['phone'])) throw new Exception(language::translate('error_missing_phone', 'You must enter a phone number.'));
+
+        if (!functions::validate_email($this->data['customer']['email'])) throw new Exception(language::translate('error_invalid_email_address', 'Invalid email address'));
+
+        if (reference::country($this->data['customer']['country_code'])->tax_id_format) {
+          if (!empty($this->data['customer']['tax_id'])) {
+            if (!preg_match('#'. reference::country($this->data['customer']['country_code'])->tax_id_format .'#i', $this->data['customer']['tax_id'])) {
+              throw new Exception(language::translate('error_invalid_tax_id_format', 'Invalid tax ID format'));
+            }
+          }
+        }
+
+        if (reference::country($this->data['customer']['country_code'])->postcode_format) {
+          if (!empty($this->data['customer']['postcode'])) {
+            if (!preg_match('#'. reference::country($this->data['customer']['country_code'])->postcode_format .'#i', $this->data['customer']['postcode'])) {
+              throw new Exception(language::translate('error_invalid_postcode_format', 'Invalid postcode format'));
+            }
+          } else {
+            throw new Exception(language::translate('error_missing_postcode', 'You must enter a postcode'));
+          }
+        }]]></find>
+      <insert><![CDATA[
+        if (empty($this->data['customer']['firstname'])) throw new Exception(language::translate('error_missing_name', 'You must enter a name.'));
+        if (empty($this->data['customer']['address1'])) throw new Exception(language::translate('error_missing_address1', 'You must enter an address.'));
+        if (empty($this->data['customer']['phone'])) throw new Exception(language::translate('error_missing_phone', 'You must enter a phone number.'));
+
+        // Make email mandatory only if an account is being created
+        if (!empty($_POST['create_account']) && empty($this->data['customer']['email'])) {
+            throw new Exception(language::translate('error_missing_email', 'You must enter an email address.'));
+        }
+
+        if (!empty($this->data['customer']['email']) && !functions::validate_email($this->data['customer']['email'])) {
+            throw new Exception(language::translate('error_invalid_email_address', 'Invalid email address'));
+        }
+      ]]></insert>
+    </operation>
+  </file>
+
+  <!-- 2. Intercept customer details AJAX handler to process name splitting and optional fields -->
+  <file name="pages/ajax/checkout_customer.inc.php">
+    <operation method="before">
+      <find><![CDATA[    // Billing address]]></find>
+      <insert><![CDATA[
+      // Automatically split single 'name' into firstname and lastname
+      if (!empty($_POST['name'])) {
+          $parts = explode(' ', trim($_POST['name']), 2);
+          $_POST['firstname'] = $parts[0];
+          $_POST['lastname'] = isset($parts[1]) ? $parts[1] : '.';
+      }
+      if (empty($_POST['country_code'])) {
+          $_POST['country_code'] = settings::get('store_country_code');
+      }
+      // Provide a dummy email for guest checkouts if email is left blank
+      if (empty($_POST['create_account']) && empty($_POST['email'])) {
+          $_POST['email'] = 'guest_' . uniqid() . '@store.local';
+      }
+      ]]></insert>
+    </operation>
+  </file>
+
+</vmod>
